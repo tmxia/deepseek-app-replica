@@ -57,4 +57,14 @@ tasks.register('buildWeb', Exec) {
 }
 
 android.sourceSets.main.assets.srcDir(webOutput)
-tasks.named('preBuild').configure { dependsOn('buildWeb') }
+tasks.named('preBuild').configure { dependsOn('buildWeb') 
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def projectName = "deepseek-app-replica"
+            if (variant.buildType.name == "release") {
+                outputFileName = "${projectName}-v${variant.versionName}.apk"
+            }
+        }
+    }
+
+}
