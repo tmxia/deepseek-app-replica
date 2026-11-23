@@ -1,6 +1,7 @@
 name: Release
 on:
   push:
+    branches: [ "main", "master" ]
     tags: [ 'v*' ]
   workflow_dispatch:
 permissions:
@@ -45,9 +46,13 @@ jobs:
           name: release-apk
           path: android/app/build/outputs/apk/release/*.apk
           retention-days: 1
-      - uses: softprops/action-gh-release@v2
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
         with:
+          tag_name: v0.9.1
+          name: Release v0.9.1
           files: android/app/build/outputs/apk/release/*.apk
+          overwrite: true
       - name: Purge old workflow runs
         if: always()
         uses: Mattraks/delete-workflow-runs@v2
