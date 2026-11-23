@@ -16,29 +16,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Cancel previous runs and purge history
+      - name: Purge all old runs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "开始清理历史运行记录..."
-          # 列出该工作流的所有运行记录，提取 ID 和状态
-          gh run list --workflow "${{ github.workflow }}" --limit 100 --json databaseId,status --jq '.[] | "\(.databaseId) \(.status)"' | while read -r id status; do
-            # 跳过当前正在执行的这个 run
+          echo "⏳ 正在清理之前的所有工作流记录..."
+          # 获取所有历史运行记录的 ID
+          RUNS=$(gh run list --limit 100 --json databaseId --jq '.[].databaseId')
+          for id in $RUNS; do
+            # 跳过当前正在运行的这一条
             if [ "$id" == "${{ github.run_id }}" ]; then
               continue
             fi
-            
-            # 如果还在运行或排队，先取消
-            if [[ "$status" == "in_progress" || "$status" == "queued" || "$status" == "waiting" ]]; then
-              echo "🛑 终止旧的运行任务: $id (状态: $status)"
-              gh run cancel "$id" || true
-            fi
-            
-            # 强制删除该记录
-            echo "🗑️ 删除旧的运行记录: $id"
-            gh run delete "$id" || true
+            echo "🗑️ 正在删除记录: $id"
+            # 使用 api 接口强制取消并删除，忽略可能产生的 API 报错
+            gh api -X POST /repos/${{ github.repository }}/actions/runs/$id/cancel || true
+            gh api -X DELETE /repos/${{ github.repository }}/actions/runs/$id || true
           done
-          echo "✅ 历史记录清理完成。"
+          echo "✅ 历史记录清理完毕。"
 
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
