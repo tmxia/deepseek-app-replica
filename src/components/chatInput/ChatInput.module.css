@@ -866,3 +866,60 @@ code[class*="language-"], pre[class*="language-"] {
 .token.function, .token.class-name { color: #6f42c1 !important; }
 .token.regex, .token.important, .token.variable { color: #e36209 !important; }
 /* ================================================ */
+
+
+/* ==================== 官方同款精致底部按钮 ==================== */
+.functionRow {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 4px 12px 12px 12px !important;
+}
+
+.toggles {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* 注意：用 !important 覆盖原生按钮样式 */
+.toggle {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  border: 1px solid transparent !important;
+  border-radius: 99px !important; /* 胶囊圆角 */
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  color: #666 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  outline: none !important;
+}
+
+.toggle:active {
+  transform: scale(0.96) !important;
+}
+
+/* 选中状态：淡蓝色背景 + 蓝色文字 */
+.toggle.selected {
+  background-color: rgba(77, 107, 254, 0.08) !important;
+  color: #4d6bfe !important;
+}
+
+.toggleLabel {
+  margin-top: 1px !important;
+}
+
+.toggle svg {
+  width: 14px !important;
+  height: 14px !important;
+  fill: currentColor !important;
+}
+/* ============================================================ */
