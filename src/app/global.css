@@ -394,3 +394,28 @@ body {
     word-wrap: normal !important;
 }
 /* ============================================================ */
+
+
+/* ==================== 修复代码块溢出与滚动 ==================== */
+/* 彻底打碎父级撑开，强制宽度 100% */
+.md-code-block {
+    display: block !important; /* 摒弃 flex 避免计算问题 */
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important; /* 防止左侧边框被撑开 */
+}
+
+/* 允许代码在手机屏幕上自动换行，绝不被截断 */
+.md-code-block pre,
+.md-code-block pre code,
+.md-code-block pre span {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: pre-wrap !important; /* 遇到屏幕边缘自动换行 */
+    word-wrap: break-word !important; 
+    word-break: break-all !important; /* 遇到极长无空格字符串强制断行 */
+    box-sizing: border-box !important;
+}
+/* ============================================================ */
