@@ -16,6 +16,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Cancel previous runs and purge history
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "开始清理历史运行记录..."
+          # 列出该工作流的所有运行记录，提取 ID 和状态
+          gh run list --workflow "${{ github.workflow }}" --limit 100 --json databaseId,status --jq '.[] | "\(.databaseId) \(.status)"' | while read -r id status; do
+            # 跳过当前正在执行的这个 run
+            if [ "$id" == "${{ github.run_id }}" ]; then
+              continue
+            fi
+            
+            # 如果还在运行或排队，先取消
+            if [[ "$status" == "in_progress" || "$status" == "queued" || "$status" == "waiting" ]]; then
+              echo "🛑 终止旧的运行任务: $id (状态: $status)"
+              gh run cancel "$id" || true
+            fi
+            
+            # 强制删除该记录
+            echo "🗑️ 删除旧的运行记录: $id"
+            gh run delete "$id" || true
+          done
+          echo "✅ 历史记录清理完成。"
+
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
@@ -55,12 +79,3 @@ jobs:
           name: Release v0.9.1
           files: android/app/build/outputs/apk/release/*.apk
           overwrite: true
-      - name: Purge old workflow runs
-        if: always()
-        uses: Mattraks/delete-workflow-runs@v2
-        with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          delete_run_by_conclusion_pattern: ALL
-          keep_minimum_runs: 1
