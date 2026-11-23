@@ -40,7 +40,9 @@ jobs:
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease
+        run: |
+          ./gradlew assembleRelease
+          mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/deepseek-app-replica-v0.9.1.apk
       - uses: actions/upload-artifact@v4
         with:
           name: release-apk

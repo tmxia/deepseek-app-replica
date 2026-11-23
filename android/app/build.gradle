@@ -20,8 +20,8 @@ android {
         applicationId = 'io.github.lijiahua1024.dsreplica'
         minSdk = 28
         targetSdk = 36
-        versionCode = 30
-        versionName = '0.9.2'
+        versionCode = 29
+        versionName = '0.9.1'
     }
 
     signingConfigs {
@@ -40,16 +40,6 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    
-    applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            def projectName = "deepseek-app-replica"
-            if (variant.buildType.name == "release") {
-                outputFileName = "${projectName}-v${variant.versionName}.apk"
-            }
-        }
-    }
-
 }
 
 def webProject = rootProject.projectDir.parentFile
@@ -67,8 +57,4 @@ tasks.register('buildWeb', Exec) {
 }
 
 android.sourceSets.main.assets.srcDir(webOutput)
-tasks.named('preBuild').configure { dependsOn('buildWeb') 
-        }
-    }
-
-}
+tasks.named('preBuild').configure { dependsOn('buildWeb') }
