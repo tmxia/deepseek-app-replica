@@ -213,7 +213,7 @@ body {
 /* ========================================================================= */
 
 
-/* ==================== DeepSeek Official Code Block ==================== */
+
 
 /* 1. 代码块外层容器 */
 .md-code-block {
@@ -295,4 +295,78 @@ body {
 .md-code-block .token.operator { 
     color: #24292e !important; /* 标点/操作符：深灰 */
 }
+/* ======================================================================= */
+
+
+/* ==================== Ultimate Code Block Fix ==================== */
+/* 1. 强制接管代码块内的所有字体、字号和行高 */
+.md-code-block,
+.md-code-block *,
+.md-code-block pre,
+.md-code-block pre * {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+    letter-spacing: 0 !important;
+    text-shadow: none !important;
+}
+
+/* 2. 代码块外框卡片感 */
+.md-code-block {
+    background-color: #f8f9fa !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    margin: 16px 0 !important;
+    overflow: hidden !important;
+}
+
+/* 3. 代码块顶部语言栏 */
+.md-code-block-banner {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 8px 16px !important; /* 增加内边距，提升质感 */
+}
+
+/* 4. 代码正文区 */
+.md-code-block pre {
+    margin: 0 !important;
+    padding: 16px !important;
+    background-color: transparent !important;
+    color: #24292e !important;
+    overflow-x: auto !important;
+}
+
+/* 5. 行内代码 */
+:not(pre) > code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+    font-size: 0.9em !important;
+    padding: 2px 6px !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    border-radius: 4px !important;
+    color: #24292e !important;
+}
+
+/* ==================== Official Highlight Colors ==================== */
+/* 关键字：区分 YAML 和 Bash */
+.md-code-block .token.keyword { color: #e45649 !important; } /* Bash: if, case, fi -> 紫红 */
+.md-code-block .token.atrule,
+.md-code-block .token.property { color: #b06a00 !important; } /* YAML: name, on -> 棕黄 */
+
+/* 字符串/布尔值 -> 绿色 */
+.md-code-block .token.string,
+.md-code-block .token.boolean,
+.md-code-block .token.builtin { color: #50a14f !important; }
+
+/* 函数名/命令 -> 紫红 */
+.md-code-block .token.function,
+.md-code-block .token.class-name { color: #e45649 !important; }
+
+/* 变量/数字 -> 暗橙 */
+.md-code-block .token.variable,
+.md-code-block .token.number,
+.md-code-block .token.constant { color: #e36209 !important; }
+
+/* 操作符/标点 -> 深灰/蓝 */
+.md-code-block .token.operator { color: #0184bc !important; }
+.md-code-block .token.punctuation { color: #24292e !important; }
 /* ======================================================================= */
