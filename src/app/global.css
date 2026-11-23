@@ -134,7 +134,7 @@ code[class*="language-"], pre[class*="language-"] {
 /* ================================================ */
 
 
-/* ==================== Official Typography & Highlight ==================== */
+
 
 /* 全局字体平滑 */
 body {
@@ -211,3 +211,88 @@ body {
 .md-code-block .token.punctuation,
 .md-code-block .token.operator { color: #24292e; }
 /* ========================================================================= */
+
+
+/* ==================== DeepSeek Official Code Block ==================== */
+
+/* 1. 代码块外层容器 */
+.md-code-block {
+    background-color: #f8f9fa !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    margin: 1.2em 0 !important;
+    overflow: hidden !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* 2. 顶部标题栏（语言与复制按钮） */
+.md-code-block-banner {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* 3. 代码正文区 */
+.md-code-block pre {
+    margin: 0 !important;
+    padding: 16px 20px !important;
+    background-color: transparent !important;
+    font-family: var(--ds-font-family-code, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace) !important;
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+    color: #24292e !important;
+    overflow-x: auto !important;
+    text-shadow: none !important;
+    white-space: pre !important;
+}
+
+/* 4. 行内代码 */
+:not(pre) > code {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    padding: 0.2em 0.4em !important;
+    border-radius: 6px !important;
+    color: #24292e !important;
+    font-family: var(--ds-font-family-code, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace) !important;
+    font-size: 0.9em !important;
+    word-break: break-word !important;
+}
+
+/* 5. 语法高亮配色 (官方 One Light 风格) */
+.md-code-block .token.keyword,
+.md-code-block .token.atrule,
+.md-code-block .token.property,
+.md-code-block .token.tag { 
+    color: #b06a00 !important; /* 关键字/属性：棕黄 */
+}
+
+.md-code-block .token.string,
+.md-code-block .token.char,
+.md-code-block .token.boolean,
+.md-code-block .token.builtin,
+.md-code-block .token.inserted { 
+    color: #50a14f !important; /* 字符串/布尔：绿色 */
+}
+
+.md-code-block .token.function,
+.md-code-block .token.class-name { 
+    color: #e45649 !important; /* 函数/类名：紫红 */
+}
+
+.md-code-block .token.number,
+.md-code-block .token.constant,
+.md-code-block .token.symbol,
+.md-code-block .token.variable { 
+    color: #e36209 !important; /* 数字/变量：暗橙 */
+}
+
+.md-code-block .token.comment,
+.md-code-block .token.prolog,
+.md-code-block .token.doctype { 
+    color: #a0a1a7 !important; /* 注释：浅灰斜体 */
+    font-style: italic !important; 
+}
+
+.md-code-block .token.punctuation,
+.md-code-block .token.operator { 
+    color: #24292e !important; /* 标点/操作符：深灰 */
+}
+/* ======================================================================= */
