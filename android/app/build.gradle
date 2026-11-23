@@ -20,16 +20,18 @@ android {
         applicationId = 'io.github.lijiahua1024.dsreplica'
         minSdk = 28
         targetSdk = 36
-        versionCode = 29
-        versionName = '0.9.1'
+        versionCode = 30
+        versionName = '0.9.2'
     }
 
     signingConfigs {
         release {
-            storeFile file('release.jks')
-            storePassword = releaseSigning.getProperty('storePassword')
-            keyAlias 'dsreplica'
-            keyPassword = releaseSigning.getProperty('keyPassword')
+            def env = System.getenv()
+            def sp = env.RELEASE_STORE_FILE ?: releaseSigning.getProperty('storeFile') ?: 'release.jks'
+            storeFile file(sp)
+            storePassword = env.RELEASE_STORE_PASSWORD ?: releaseSigning.getProperty('storePassword')
+            keyAlias = env.RELEASE_KEY_ALIAS ?: releaseSigning.getProperty('keyAlias') ?: 'dsreplica'
+            keyPassword = env.RELEASE_KEY_PASSWORD ?: releaseSigning.getProperty('keyPassword')
         }
     }
 
