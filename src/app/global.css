@@ -370,3 +370,27 @@ body {
 .md-code-block .token.operator { color: #0184bc !important; }
 .md-code-block .token.punctuation { color: #24292e !important; }
 /* ======================================================================= */
+
+
+/* ==================== 修复代码块溢出与滚动 ==================== */
+.md-code-block {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.md-code-block pre {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: pre !important;
+    word-wrap: normal !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.md-code-block code {
+    white-space: pre !important;
+    word-wrap: normal !important;
+}
+/* ============================================================ */
