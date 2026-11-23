@@ -22,7 +22,7 @@ jobs:
         run: |
           echo "⏳ 正在清理之前的所有工作流记录..."
           # 获取所有历史运行记录的 ID
-          RUNS=$(gh run list --limit 100 --json databaseId --jq '.[].databaseId')
+          RUNS=$(gh run list -R ${{ github.repository }} --limit 100 --json databaseId --jq '.[].databaseId')
           for id in $RUNS; do
             # 跳过当前正在运行的这一条
             if [ "$id" == "${{ github.run_id }}" ]; then
