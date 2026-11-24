@@ -1,4 +1,4 @@
-import { memo, useEffect, useLayoutEffect, useRef } from 'react'
+import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { android } from './android.js'
 import { useAndroidBackInterception } from './useAndroidBackInterception.js'
 import { useTranslate } from '../i18n/index.js'
@@ -86,21 +86,33 @@ const ChatContent = memo(function ChatContent({
     state.activeId === null ? false : Object.hasOwn(state.streaming, state.activeId)
   )
 
+  const [showLoadingText, setShowLoadingText] = useState(false)
+  useEffect(() => {
+    setShowLoadingText(false)
+    if (ready) {
+      return
+    }
+    const timer = window.setTimeout(() => setShowLoadingText(true), 150)
+    return () => window.clearTimeout(timer)
+  }, [ready, activeId, session])
+
   if (!ready || (activeId !== null && !session)) {
     const loadFailed = !ready ? initError : sessionLoadError
     return (
       <div className={styles.loadingView}>
         {isMobile ? <MobileHeader /> : null}
         <div className={styles.loadingState} role="status" aria-live="polite">
-          <span>
-            {t(
-              loadFailed
-                ? !ready
-                  ? 'sessionListLoadFailed'
-                  : 'sessionLoadFailed'
-                : 'sessionLoading'
-            )}
-          </span>
+          {loadFailed || showLoadingText ? (
+            <span className={loadFailed ? undefined : styles.loadingText}>
+              {t(
+                loadFailed
+                  ? !ready
+                    ? 'sessionListLoadFailed'
+                    : 'sessionLoadFailed'
+                  : 'sessionLoading'
+              )}
+            </span>
+          ) : null}
           {loadFailed ? (
             <Button
               variant="outlined"
