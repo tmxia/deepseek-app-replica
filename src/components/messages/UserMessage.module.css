@@ -152,13 +152,6 @@
   line-height: inherit;
 }
 
-.bubbleCollapsed .bubbleText {
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 .foldToggle {
   display: inline-flex;
   align-items: center;

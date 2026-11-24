@@ -54,6 +54,7 @@ export const UserMessage = memo(function UserMessage({
   const [draft, setDraft] = useState(message.content)
   const [collapsed, setCollapsed] = useState(true)
   const [needsFold, setNeedsFold] = useState(false)
+  const [foldThreshold, setFoldThreshold] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const bubbleRef = useRef<HTMLDivElement>(null)
   const bubbleTextRef = useRef<HTMLDivElement>(null)
@@ -80,7 +81,9 @@ export const UserMessage = memo(function UserMessage({
         return
       }
       const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 24
-      setNeedsFold(el.scrollHeight > lineHeight * 4 + lineHeight * 0.5)
+      const threshold = lineHeight * 4
+      setFoldThreshold(threshold)
+      setNeedsFold(el.scrollHeight > threshold + lineHeight * 0.5)
     }
     measure()
     let observer: ResizeObserver | null = null
@@ -210,10 +213,7 @@ export const UserMessage = memo(function UserMessage({
           {message.content ? (
             <div
               ref={bubbleRef}
-              className={clsx(
-                styles.bubble,
-                needsFold && collapsed && styles.bubbleCollapsed
-              )}
+              className={styles.bubble}
               data-editing-bubble={editingTarget ? 'true' : undefined}
               role={android ? 'button' : undefined}
               tabIndex={android ? 0 : undefined}
@@ -236,6 +236,11 @@ export const UserMessage = memo(function UserMessage({
               <div
                 ref={bubbleTextRef}
                 className={styles.bubbleText}
+                style={
+                  needsFold && collapsed && foldThreshold > 0
+                    ? { maxHeight: `${foldThreshold}px`, overflow: 'hidden' }
+                    : undefined
+                }
               >
                 {message.content}
               </div>
