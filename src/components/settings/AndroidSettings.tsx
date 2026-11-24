@@ -46,6 +46,8 @@ import { createSettingsPageMotion } from './androidSettingsMotion.js'
 import { ProfileIcon } from './ProfileAvatar.js'
 import { ProfileEditor } from './ProfileEditor.js'
 import { closeSettings, useSettingsDialog } from './settingsDialogState.js'
+import { balanceCurrencySymbol } from '../../services/api/balance.js'
+import { useAccountBalance, type BalanceState } from './useAccountBalance.js'
 import styles from './AndroidSettings.module.css'
 
 const appVersion = document.querySelector<HTMLMetaElement>(
@@ -54,6 +56,7 @@ const appVersion = document.querySelector<HTMLMetaElement>(
 const policiesUrl = 'https://cdn.deepseek.com/policies'
 const chinesePoliciesUrl = `${policiesUrl}/zh-CN`
 const faqUrl = 'https://static.deepseek.com/faq/index.html'
+const platformUsageUrl = 'https://platform.deepseek.com/usage'
 const releasesUrl = 'https://github.com/LiJiaHua1024/deepseek-app-replica/releases/latest'
 
 const updateMessages = {
@@ -247,6 +250,67 @@ const Row = ({
   return <div className={styles.row}>{contents}</div>
 }
 
+/** 已登录 Key 的账号余额卡片：展示总余额、赠金/充值分项，支持手动刷新。 */
+const BalancePanel = ({ state, onRefresh }: { state: BalanceState; onRefresh: () => void }) => {
+  const t = useTranslate()
+  if (state.status === 'idle') {
+    return null
+  }
+
+  const ready = state.status === 'ready'
+  const symbol = ready ? balanceCurrencySymbol(state.data.currency) : ''
+  const currencyCode =
+    ready && state.data.currency && !['CNY', 'USD'].includes(state.data.currency)
+      ? state.data.currency
+      : ''
+
+  let value: string
+  let tone: 'default' | 'error' | 'muted' = 'default'
+  if (state.status === 'loading') {
+    value = t('balanceLoading')
+    tone = 'muted'
+  } else if (state.status === 'error') {
+    value = state.reason === 'unauthorized' ? t('balanceUnauthorized') : t('balanceFailed')
+    tone = 'error'
+  } else {
+    value = state.data.isAvailable
+      ? `${symbol}${state.data.totalBalance}`
+      : t('balanceLow')
+    tone = state.data.isAvailable ? 'default' : 'error'
+  }
+
+  return (
+    <div className={styles.balance} data-tone={tone}>
+      <div className={styles.balanceMain}>
+        <span className={styles.balanceLabel}>{t('balanceTitle')}</span>
+        <span className={styles.balanceValue}>
+          {value}
+          {currencyCode ? ` ${currencyCode}` : ''}
+        </span>
+        <button
+          type="button"
+          className={styles.balanceRefresh}
+          aria-label={t('balanceRefresh')}
+          disabled={state.status === 'loading'}
+          onClick={onRefresh}
+        >
+          <IconRefreshOutline16 />
+        </button>
+      </div>
+      {ready ? (
+        <div className={styles.balanceMeta}>
+          <span>
+            {t('balanceGranted')} {symbol}{state.data.grantedBalance}
+          </span>
+          <span>
+            {t('balanceToppedUp')} {symbol}{state.data.toppedUpBalance}
+          </span>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 const Switch = ({
   label,
   checked,
@@ -364,6 +428,7 @@ const Settings = ({ start, chatFrame }: { start: Page; chatFrame: RefObject<HTML
   const exiting = useRef(false)
   const sessions = useChatStore((state) => state.sessions.length)
   const editor = useApiKeyEditor()
+  const balance = useAccountBalance(editor.apiKey)
   const updateBusy = update.phase === 'checking' || update.phase === 'downloading'
 
   useEffect(() => {
@@ -752,10 +817,22 @@ const Settings = ({ start, chatFrame }: { start: Page; chatFrame: RefObject<HTML
                   <ApiKeyConfirm editor={editor} />
                 </div>
               ) : null}
+              {editor.apiKey ? (
+                <BalancePanel state={balance.state} onRefresh={balance.refresh} />
+              ) : null}
               <Row
                 label={labels.advanced}
                 value={chatConfig.model}
                 onClick={() => openPage('advanced')}
+              />
+              <Row
+                label={t('balanceUsageEntry')}
+                icon={<IconLinkOutline16 />}
+                onClick={() => {
+                  if (!openAndroidPage(platformUsageUrl)) {
+                    window.open(platformUsageUrl, '_blank', 'noopener')
+                  }
+                }}
               />
               <Row
                 label={tr('开放平台', 'Open platform')}
