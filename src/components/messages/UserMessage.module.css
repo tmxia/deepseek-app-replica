@@ -153,6 +153,8 @@
 }
 
 .foldToggle {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;

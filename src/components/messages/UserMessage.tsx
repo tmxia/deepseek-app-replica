@@ -79,14 +79,15 @@ export const UserMessage = memo(function UserMessage({
   const [selecting, setSelecting] = useState(false)
   const [draft, setDraft] = useState(message.content)
   const [collapsed, setCollapsed] = useState(true)
-  const [needsFold, setNeedsFold] = useState(false)
-  const [foldThreshold, setFoldThreshold] = useState(0)
+  const [foldThreshold, setFoldThreshold] = useState(96)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const bubbleRef = useRef<HTMLDivElement>(null)
   const bubbleTextRef = useRef<HTMLDivElement>(null)
   const menuTriggerRef = useRef<HTMLButtonElement>(null)
   const isMobile = useIsMobile()
   const canSend = !busy && (draft.trim() !== '' || message.files.length > 0)
+  // 派生判定：不依赖 layout effect 是否触发，避免旧 WebView 下 effect 未执行导致按钮不出现
+  const needsFold = estimateLineCount(message.content, 16) > FOLD_LINES
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current
@@ -107,11 +108,8 @@ export const UserMessage = memo(function UserMessage({
         return
       }
       const computed = getComputedStyle(bubbleTextRef.current)
-      const fontSize = parseFloat(computed.fontSize) || 16
       const lineHeight = parseFloat(computed.lineHeight) || 24
       setFoldThreshold(lineHeight * FOLD_LINES)
-      // 不读取 scrollHeight 等滚动测量值，仅按文本自身估算行数判定是否折叠
-      setNeedsFold(estimateLineCount(message.content, fontSize) > FOLD_LINES)
     }
     apply()
     if (document.fonts && typeof document.fonts.ready !== 'undefined') {
