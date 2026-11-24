@@ -99,10 +99,10 @@ export const CodeBlock = memo(function CodeBlock({
       unmounted = true
     }
   }, [lang, loaded, rerender])
+  const name = lang !== null && loaded ? lang : 'plaintext'
   const renderedHtml = useMemo(() => {
-    const name = lang !== null && loaded ? lang : 'plaintext'
     return Prism.highlight(code, Prism.languages[name], name)
-  }, [code, lang, loaded])
+  }, [code, name])
   return (
     <div className="md-code-block">
       <div className="md-code-block-banner">
