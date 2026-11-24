@@ -52,6 +52,8 @@ export const UserMessage = memo(function UserMessage({
   const [editing, setEditing] = useState(false)
   const [selecting, setSelecting] = useState(false)
   const [draft, setDraft] = useState(message.content)
+  const [collapsed, setCollapsed] = useState(true)
+  const [needsFold, setNeedsFold] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const bubbleRef = useRef<HTMLDivElement>(null)
   const bubbleTextRef = useRef<HTMLSpanElement>(null)
@@ -66,6 +68,15 @@ export const UserMessage = memo(function UserMessage({
       textarea.style.height = `${Math.min(textarea.scrollHeight, 202)}px`
     }
   }, [editing, draft])
+
+  useLayoutEffect(() => {
+    const el = bubbleTextRef.current
+    if (!el || editing) {
+      return
+    }
+    const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 24
+    setNeedsFold(el.scrollHeight > lineHeight * 4 + lineHeight * 0.5)
+  }, [message.content, editing])
 
   const sendEdit = () => {
     if (canSend && ensureApiKey() && editMessage(sessionId, message.id, draft.trim())) {
@@ -196,9 +207,28 @@ export const UserMessage = memo(function UserMessage({
                 }
               }}
             >
-              <span ref={bubbleTextRef} className={styles.bubbleText}>
+              <span
+                ref={bubbleTextRef}
+                className={clsx(
+                  styles.bubbleText,
+                  needsFold && collapsed && styles.bubbleTextCollapsed
+                )}
+              >
                 {message.content}
               </span>
+              {needsFold ? (
+                <button
+                  type="button"
+                  className={styles.foldToggle}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    setCollapsed((show) => !show)
+                  }}
+                  onKeyDown={(event) => event.stopPropagation()}
+                >
+                  {collapsed ? t('expandBlock') : t('collapseBlock')}
+                </button>
+              ) : null}
               {android ? (
                 <>
                   <AndroidTextSelection

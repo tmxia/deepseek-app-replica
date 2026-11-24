@@ -360,6 +360,13 @@
   font-variation-settings: normal;
 }
 
+.md-code-block.is-collapsed > pre {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .markdown-table-wrapper {
   overflow-x: auto;
 }
