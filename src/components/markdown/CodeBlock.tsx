@@ -116,7 +116,7 @@ export const CodeBlock = memo(function CodeBlock({
       {isMermaid && showDiagram ? (
         <MermaidDiagram code={code} loading={loading} />
       ) : (
-        <pre dangerouslySetInnerHTML={{ __html: renderedHtml }}></pre>
+        <pre dangerouslySetInnerHTML={{ __html: renderedHtml }} data-lang={name}></pre>
       )}
     </div>
   )

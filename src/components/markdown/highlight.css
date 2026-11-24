@@ -18,8 +18,6 @@ body.dark .md-code-block {
   }
 
   .token.attr-name,
-  .token.boolean,
-  .token.boolean.important,
   .token.number,
   .token.constant,
   .token.selector .token.attribute {
@@ -31,7 +29,8 @@ body.dark .md-code-block {
   .token.parameter,
   .token.property,
   .token.property-access,
-  .token.variable {
+  .token.variable,
+  .token.boolean {
     color: #6cb8e6;
   }
 
@@ -234,6 +233,10 @@ body.dark .md-code-block {
   .command-line .command-line-prompt > span:before {
     color: #8da1b9da;
   }
+
+  pre[data-lang='yaml'] {
+    color: #91d076;
+  }
 }
 
 body.light .md-code-block {
@@ -251,7 +254,6 @@ body.light .md-code-block {
 
   .token.attr-name,
   .token.class-name,
-  .token.boolean,
   .token.constant,
   .token.number,
   .token.atrule {
@@ -283,7 +285,8 @@ body.light .md-code-block {
 
   .token.variable,
   .token.operator,
-  .token.function {
+  .token.function,
+  .token.boolean {
     color: hsl(221, 87%, 60%);
   }
 
@@ -399,5 +402,9 @@ body.light .md-code-block {
   .token.token.lf:before,
   .token.token.space:before {
     color: hsla(230, 8%, 24%, 0.2);
+  }
+
+  pre[data-lang='yaml'] {
+    color: hsl(119, 34%, 47%);
   }
 }
