@@ -74,8 +74,31 @@ export const UserMessage = memo(function UserMessage({
     if (!el || editing) {
       return
     }
-    const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 24
-    setNeedsFold(el.scrollHeight > lineHeight * 4 + lineHeight * 0.5)
+    let cancelled = false
+    const measure = () => {
+      if (cancelled || !bubbleTextRef.current) {
+        return
+      }
+      const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 24
+      setNeedsFold(el.scrollHeight > lineHeight * 4 + lineHeight * 0.5)
+    }
+    measure()
+    let observer: ResizeObserver | null = null
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(measure)
+      observer.observe(el)
+    }
+    if (document.fonts && typeof document.fonts.ready !== 'undefined') {
+      void document.fonts.ready.then(() => {
+        if (!cancelled) {
+          measure()
+        }
+      })
+    }
+    return () => {
+      cancelled = true
+      observer?.disconnect()
+    }
   }, [message.content, editing])
 
   const sendEdit = () => {

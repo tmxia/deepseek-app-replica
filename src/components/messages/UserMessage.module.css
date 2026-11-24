@@ -145,12 +145,11 @@
 }
 
 .bubbleText {
-  display: inline-block;
+  display: block;
   max-width: 100%;
   position: relative;
   z-index: 1;
   line-height: inherit;
-  vertical-align: top;
 }
 
 .bubbleTextCollapsed {
