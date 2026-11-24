@@ -13,7 +13,7 @@ import { loadFile } from './db.js'
 import type { FileAttachment, UserMessage } from './types.js'
 
 export type DraftAttachment = {
-  /** 本地标识，也是 IndexedDB 原件与上传任务的 key */
+  /** 本地标识，也是附件原件与上传任务的 key */
   id: string
   /** 新选或裁剪得到的本地文件；沿用历史附件时为 null */
   file: File | null

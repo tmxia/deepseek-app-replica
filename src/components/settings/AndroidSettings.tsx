@@ -11,6 +11,7 @@ import {
   BackupError,
   clearHistory,
   exportHistory,
+  formatExportWarning,
   formatImportResult,
   importHistory,
   type ImportMode,
@@ -712,11 +713,7 @@ const Settings = ({ start, chatFrame }: { start: Page; chatFrame: RefObject<HTML
                 icon={<IconLightOutline16 />}
                 onClick={() => setPopup('theme')}
               />
-              <Row
-                label={labels.font}
-                icon={<FontSizeIcon />}
-                onClick={() => openPage('font')}
-              />
+              <Row label={labels.font} icon={<FontSizeIcon />} onClick={() => openPage('font')} />
               <Row
                 label={labels.personalization}
                 icon={<PersonalizationIcon />}
@@ -926,6 +923,10 @@ const Settings = ({ start, chatFrame }: { start: Page; chatFrame: RefObject<HTML
                   void runExportAction(async () => {
                     setExportSavedName(null)
                     const exported = await exportHistory()
+                    const warning = formatExportWarning(exported)
+                    if (warning) {
+                      showToast(warning)
+                    }
                     if (android) {
                       if (await saveAndroidHistory(exported.name, exported.blob)) {
                         setExportSavedName(exported.name)

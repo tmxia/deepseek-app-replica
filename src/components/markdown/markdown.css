@@ -208,6 +208,13 @@
   border-radius: 6px;
   padding: 0 5px;
 }
+[data-android] .ds-markdown code {
+  display: inline;
+  color: var(--dsw-alias-label-tertiary);
+  background-color: transparent;
+  padding: 0;
+  overflow-wrap: break-word;
+}
 .ds-markdown {
   h1,
   h2,

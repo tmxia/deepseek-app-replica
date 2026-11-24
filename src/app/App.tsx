@@ -258,6 +258,15 @@ export const App = () => {
 
   // 文件数、存储空间达到上限时，附件上只显示「上传失败」，原因用 toast 说明
   useEffect(() => onUploadNotice(showToast), [])
+
+  const storageAlert = useChatStore((state) => state.storageAlert)
+  useEffect(() => {
+    if (storageAlert === null) {
+      return
+    }
+    showToast(storageAlert, 6000)
+    useChatStore.setState({ storageAlert: null })
+  }, [storageAlert])
   useEffect(bindChatPersistence, [])
 
   // 搜索结果面板只属于当前会话

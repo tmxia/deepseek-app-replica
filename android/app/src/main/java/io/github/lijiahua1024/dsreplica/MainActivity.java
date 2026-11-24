@@ -68,6 +68,9 @@ public final class MainActivity extends Activity {
     private Uri capture;
     private RecentPhotos recentPhotos;
     private FileExport historyExport;
+    private ChatStorage chatStorage;
+    private final Object storageOwner = new Object();
+    private ShadowStore shadow;
     private ImageSave imageSave;
     private NativeRecorder recorder;
     private AppUpdater updater;
@@ -89,6 +92,8 @@ public final class MainActivity extends Activity {
         profilePreferences = getSharedPreferences("account_profile", MODE_PRIVATE);
         recentPhotos = new RecentPhotos(getContentResolver());
         historyExport = new FileExport(getContentResolver());
+        chatStorage = ChatStorage.get(this);
+        shadow = new ShadowStore(this);
         imageSave = new ImageSave(this);
         recorder = new NativeRecorder();
         frame = new FrameLayout(this);
@@ -237,6 +242,15 @@ public final class MainActivity extends Activity {
             Uri url = request.getUrl();
             if (!isBundled(url)) return null;
             String path = url.getPath();
+            if ("GET".equals(request.getMethod()) && path != null && path.startsWith("/chat-attachment/")) {
+                try {
+                    return new WebResourceResponse("application/octet-stream", null, 200, "OK",
+                        Map.of("Cache-Control", "no-store", "X-Content-Type-Options", "nosniff"),
+                        chatStorage.openAttachment(path.substring("/chat-attachment/".length())));
+                } catch (IOException ignored) {
+                    // A missing native file returns the bundled origin's 404.
+                }
+            }
             if ("/recording.wav".equals(path)) {
                 WebResourceResponse audio = recorder.takeWav();
                 if (audio != null) return audio;
@@ -487,6 +501,7 @@ public final class MainActivity extends Activity {
         if (fileCallback != null) fileCallback.onReceiveValue(null);
         recorder.finish(false);
         historyExport.close();
+        chatStorage.disconnect(storageOwner);
         imageSave.finish(false);
         frame.removeView(webView);
         webView.destroy();
@@ -637,6 +652,23 @@ public final class MainActivity extends Activity {
 
         @JavascriptInterface
         public boolean finishHistoryExport() { return historyExport.close(); }
+
+        // 聊天数据的原生文件影子镜像：WebView IndexedDB 被系统清空时用于恢复。
+        @JavascriptInterface
+        public String chatStorage(String method, String json) {
+            return chatStorage.request(storageOwner, method, json);
+        }
+
+        @JavascriptInterface
+        public String shadowList(String dir) { return shadow.list(dir); }
+
+        @JavascriptInterface
+        public String shadowReadChunk(String path, long offset) {
+            return shadow.readChunk(path, offset);
+        }
+
+        @JavascriptInterface
+        public boolean shadowClearAll() { return shadow.clearAll(); }
 
         @JavascriptInterface
         public void requestImageSavePermission() {

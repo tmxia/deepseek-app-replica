@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { createId } from '../../utils/id.js'
+import type { TranslationMessage } from '../../i18n/index.js'
 import { DEFAULT_CHAT_MODEL } from '../api/chatConfig.js'
 import { ApiError, streamChatMessage } from '../api/client.js'
 import type { CreateMessageRequest, MessageParam } from '../api/types.js'
@@ -45,6 +46,7 @@ import {
 } from './contextSummary.js'
 import { prepareCustomAttachments } from './customAttachments.js'
 import * as db from './db.js'
+import type { MigrationNotice } from './androidStorage.js'
 import {
   cancelMessageEdit,
   clearAllDrafts,
@@ -133,6 +135,7 @@ type ChatState = {
   pendingJump: PendingMessageJump | null
   /** 正在生成回复的会话 */
   streaming: Record<string, AbortController>
+  storageAlert: TranslationMessage | null
 }
 
 export const useChatStore = create<ChatState>(() => ({
@@ -146,6 +149,7 @@ export const useChatStore = create<ChatState>(() => ({
   activeId: null,
   pendingJump: null,
   streaming: {},
+  storageAlert: null,
 }))
 
 const { getState: get, setState: set } = useChatStore
@@ -351,6 +355,21 @@ const settleInterrupted = (session: Session): Session => {
         : m
     ),
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('chat-storage-reset', () => {
+    set({ storageAlert: { key: 'storageResetDuringUse' } })
+  })
+  window.addEventListener('chat-storage-migrated', (event) => {
+    const { recovered, missing, unverified } = (event as CustomEvent<MigrationNotice>).detail
+    set({
+      storageAlert:
+        missing || unverified
+          ? { key: 'storageMigrationIncomplete', params: { missing, unverified } }
+          : { key: 'storageMigrationRecovered', params: { count: recovered } },
+    })
+  })
 }
 
 export const initChat = (): Promise<void> => {

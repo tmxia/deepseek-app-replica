@@ -61,6 +61,11 @@ export const zh = {
   sessionListLoadFailed: '对话列表加载失败，请重试',
   sessionLoadFailed: '对话加载失败，请重试',
   sessionSaveFailed: '对话或附件尚未保存到本机，关闭页面可能丢失，请重试',
+  storageResetDuringUse:
+    '检测到浏览器存储被清空，已暂停保存。可先导出仍可读取的对话，再重新打开页面',
+  storageMigrationRecovered: '已从本机旧备份恢复 {count} 条对话',
+  storageMigrationIncomplete:
+    '已保留旧存储。{missing} 条对话无法恢复，{unverified} 条镜像记录无法核对',
   sessionDeleteFailed: '删除对话失败，请重试',
   settings: '设置',
   checkForUpdate: '检查更新',
@@ -262,6 +267,10 @@ export const zh = {
     '包含所有历史对话及本地图片原件；其他附件仅保留文件信息，不包含 API Key。',
   historyExporting: '正在导出并保存…',
   historyExportSaved: '已保存：{name}',
+  historyExportSkipped: '导出跳过了 {count} 条无法读取的对话',
+  historyExportUnreadableImages: '导出跳过了 {images} 张无法读取的图片原件',
+  historyExportSkippedWithImages:
+    '导出跳过了 {count} 条无法读取的对话和 {images} 张无法读取的图片原件',
   exportAllDownload: '下载',
   deleteAllSessions: '删除所有对话',
   deleteAllSessionsModalTitle: '删除后，所有对话都将被清空且无法找回',

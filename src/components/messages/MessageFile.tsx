@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { android } from '../../app/android.js'
 import { useTranslate } from '../../i18n/index.js'
 import { useUploads } from '../../services/attachments.js'
-import { loadFile } from '../../services/chat/db.js'
+import { loadFile, reportStorageError } from '../../services/chat/db.js'
 import { addDraftFiles } from '../../services/chat/drafts.js'
 import { useChatStore } from '../../services/chat/store.js'
 import type { FileAttachment } from '../../services/chat/types.js'
@@ -17,18 +17,25 @@ import styles from './MessageFile.module.css'
 
 type FileSource = { blob: Blob; url: string }
 
-/** 原件从 IndexedDB 读出并生成本地地址；undefined 表示加载中，null 表示原件缺失。 */
+/** 读取本地原件并生成预览地址。undefined 表示加载中，null 表示原件不可用。 */
 const useFileSource = (id: string) => {
   const [fileSource, setFileSource] = useState<{ id: string; source: FileSource | null }>()
   useEffect(() => {
     let objectUrl: string | null = null
     let cancelled = false
-    loadFile(id).then((blob) => {
-      if (!cancelled) {
-        objectUrl = blob ? URL.createObjectURL(blob) : null
-        setFileSource({ id, source: blob && objectUrl ? { blob, url: objectUrl } : null })
-      }
-    })
+    void loadFile(id)
+      .then((blob) => {
+        if (!cancelled) {
+          objectUrl = blob ? URL.createObjectURL(blob) : null
+          setFileSource({ id, source: blob && objectUrl ? { blob, url: objectUrl } : null })
+        }
+      })
+      .catch((error: unknown) => {
+        reportStorageError('read message attachment')(error)
+        if (!cancelled) {
+          setFileSource({ id, source: null })
+        }
+      })
     return () => {
       cancelled = true
       if (objectUrl) {
@@ -89,7 +96,7 @@ export const MessageFile = ({
       )
     ) : null
 
-    // 上传中：本地原件已在 IndexedDB，先垫在蒙层下显示，避免只有一块灰色占位
+    // 上传中先在蒙层下显示本地原件。
     if (uploading) {
       return (
         <div className={clsx(styles.image, styles.imageThumb)} title={file.name}>

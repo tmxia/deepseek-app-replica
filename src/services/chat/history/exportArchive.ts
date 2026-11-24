@@ -13,7 +13,8 @@ const json = (value: unknown) => new Blob([JSON.stringify(value)], { type: 'appl
  */
 export const exportArchive = async (
   sessions: Iterable<Session> | AsyncIterable<Session>,
-  pinnedIds?: ReadonlySet<string>
+  pinnedIds?: ReadonlySet<string>,
+  onUnreadableImage?: () => void
 ): Promise<Blob> => {
   const manifest: Manifest = { export_format_version: EXPORT_FORMAT_VERSION }
   const entries = [{ name: MANIFEST_PATH, blob: json(manifest) }]
@@ -25,7 +26,12 @@ export const exportArchive = async (
       if (message.role === 'user') {
         for (const file of message.files) {
           if (file.isImage && !originals.has(file.id)) {
-            originals.set(file.id, await db.loadFile(file.id))
+            const original = await db.loadFile(file.id).catch((error: unknown) => {
+              db.reportStorageError('read attachment for export')(error)
+              onUnreadableImage?.()
+              return undefined
+            })
+            originals.set(file.id, original)
           }
         }
       }

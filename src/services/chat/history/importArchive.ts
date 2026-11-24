@@ -1,4 +1,4 @@
-import { stagingWriter, type StoredFile } from '../db.js'
+import { stagingWriter, type StagingWriter, type StoredFile } from '../db.js'
 import type { Session, SessionSummary } from '../types.js'
 import { BackupError, fail } from './errors.js'
 import type { SessionIndexEntry } from './format.js'
@@ -72,7 +72,8 @@ export const importArchive = async (
   file: File,
   importId: string,
   onProgress: (progress: ArchiveProgress) => void,
-  mode: ImportMode = 'replace'
+  mode: ImportMode = 'replace',
+  staging: StagingWriter = stagingWriter(importId)
 ): Promise<ImportArchiveResult> => {
   const recognized = await isZipFile(file).catch((cause: unknown) => {
     throw new ArchiveSourceError('Unable to read the history archive', { cause })
@@ -97,7 +98,6 @@ export const importArchive = async (
   let index: SessionIndexEntry[] | undefined
   let currentSessionId: string | undefined
   const decoder = new TextDecoder()
-  const staging = stagingWriter(importId)
   let pendingSessions: Promise<{ error: unknown } | undefined> | undefined
 
   const waitForSessions = async () => {
@@ -117,7 +117,7 @@ export const importArchive = async (
     if (!batch.length) {
       return
     }
-    // 只保留一批待写入数据，解析下一批时让 IndexedDB 完成上一批。
+    // 只保留一批待写入数据，解析下一批时让存储层完成上一批。
     pendingSessions = staging.addSessions(batch).then(
       () => undefined,
       (error: unknown) => ({ error })

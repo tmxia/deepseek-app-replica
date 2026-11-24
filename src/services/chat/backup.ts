@@ -13,6 +13,8 @@ export type ImportHistoryResult =
   | { mode: 'replace'; count: number }
   | { mode: 'merge'; added: number; merged: number; unchanged: number }
 
+type ExportHistoryResult = { name: string; blob: Blob; skipped: number; unreadableImages: number }
+
 // 导入、导出与全部删除串行处理，避免读取归档时数据被清空或两个替换事务交错。
 let backupQueue: Promise<unknown> = Promise.resolve()
 
@@ -24,19 +26,25 @@ const enqueueBackup = <T>(run: () => Promise<T>): Promise<T> => {
 
 const backupFileName = (date: Date) => `deepseek_data-${formatDate(date)}.zip`
 
-/** 导出为历史会话导出格式的 ZIP，可再次导入。 */
-export const exportHistory = (): Promise<{ name: string; blob: Blob }> =>
+/** 导出为历史会话导出格式的 ZIP，可再次导入。个别会话在主库中缺失时跳过，由 skipped 带回数量。 */
+export const exportHistory = (): Promise<ExportHistoryResult> =>
   enqueueBackup(async () => {
     // 列表、置顶和已加载内容保留导出开始时的快照；未打开的会话逐条读取，不填满详情缓存。
     const { sessions, sessionCache } = useChatStore.getState()
     const pinnedIds = new Set(useSettings.getState().pinnedSessions)
+    let skipped = 0
+    let unreadableImages = 0
     async function* readSessions(): AsyncGenerator<Session> {
       for (const summary of sessions) {
         const session = Object.hasOwn(sessionCache, summary.id)
           ? sessionCache[summary.id]
-          : await db.loadSession(summary.id)
+          : await db.loadSession(summary.id).catch((error: unknown) => {
+              db.reportStorageError('read session for export')(error)
+              return undefined
+            })
         if (!session) {
-          throw new Error(`History session disappeared during export: ${summary.id}`)
+          skipped += 1
+          continue
         }
         // 详情读取期间可能重命名，归档标题与开始时的列表保持一致。
         yield { ...session, ...summary }
@@ -44,9 +52,29 @@ export const exportHistory = (): Promise<{ name: string; blob: Blob }> =>
     }
     const { exportArchive } = await import('./history/exportArchive.js')
     const now = new Date()
-    const blob = await exportArchive(readSessions(), pinnedIds)
-    return { name: backupFileName(now), blob }
+    const blob = await exportArchive(readSessions(), pinnedIds, () => {
+      unreadableImages += 1
+    })
+    return { name: backupFileName(now), blob, skipped, unreadableImages }
   })
+
+export const formatExportWarning = ({
+  skipped,
+  unreadableImages,
+}: ExportHistoryResult): TranslationMessage | undefined => {
+  if (unreadableImages) {
+    return skipped
+      ? {
+          key: 'historyExportSkippedWithImages',
+          params: { count: skipped, images: unreadableImages },
+        }
+      : { key: 'historyExportUnreadableImages', params: { images: unreadableImages } }
+  }
+  if (skipped) {
+    return { key: 'historyExportSkipped', params: { count: skipped } }
+  }
+  return undefined
+}
 
 /** 确认导入后调用：支持合并（默认）或覆盖。先校验 ZIP 并写入暂存，通过后再提交。 */
 export const importHistory = (
