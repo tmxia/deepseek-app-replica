@@ -750,5 +750,42 @@ public final class MainActivity extends Activity {
                 webView.setSystemGestureExclusionRects(rects);
             });
         }
+
+        @JavascriptInterface
+        public boolean isIgnoringBatteryOptimizations() {
+            android.os.PowerManager pm =
+                    (android.os.PowerManager) getSystemService(android.content.Context.POWER_SERVICE);
+            return pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
+        }
+
+        @JavascriptInterface
+        public void requestIgnoreBatteryOptimizations() {
+            runOnUiThread(() -> {
+                try {
+                    android.os.PowerManager pm =
+                            (android.os.PowerManager) getSystemService(android.content.Context.POWER_SERVICE);
+                    if (pm != null && pm.isIgnoringBatteryOptimizations(getPackageName())) return;
+                    Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    intent.setData(android.net.Uri.parse("package:" + getPackageName()));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    try {
+                        startActivity(new Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+                    } catch (Exception ignored) {
+                    }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void openBatteryOptimizationSettings() {
+            runOnUiThread(() -> {
+                try {
+                    startActivity(new Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+                } catch (Exception ignored) {
+                }
+            });
+        }
     }
 }

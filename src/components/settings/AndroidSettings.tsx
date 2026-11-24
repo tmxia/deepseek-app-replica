@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { android, saveAndroidHistory } from '../../app/android.js'
 import { openAndroidPage } from '../../app/openAndroidPage.js'
 import {
@@ -422,6 +422,7 @@ const Settings = ({ start, chatFrame }: { start: Page; chatFrame: RefObject<HTML
   const [importMode, setImportMode] = useState<ImportMode>('merge')
   const [importStatus, setImportStatus] = useState<LinkedMessage | null>(null)
   const [exportSavedName, setExportSavedName] = useState<string | null>(null)
+  const [keepAliveEnabled, setKeepAliveEnabled] = useState(false)
   const importInput = useRef<HTMLInputElement>(null)
   const pagesRef = useRef<HTMLDivElement>(null)
   const motionRef = useRef<ReturnType<typeof createSettingsPageMotion>>()
@@ -460,6 +461,53 @@ const Settings = ({ start, chatFrame }: { start: Page; chatFrame: RefObject<HTML
     return () => window.removeEventListener('android-update', onUpdate)
   }, [])
 
+  // 读取原生“忽略电池优化”状态并回填开关；桥接不存在时不改动当前开关
+  const refreshKeepAlive = useCallback(() => {
+    const device = android
+    if (!device?.isIgnoringBatteryOptimizations) {
+      return
+    }
+    try {
+      setKeepAliveEnabled(Boolean(device.isIgnoringBatteryOptimizations()))
+    } catch {
+      // 忽略原生读取异常，保持当前开关状态
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshKeepAlive()
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        refreshKeepAlive()
+      }
+    }
+    window.addEventListener('focus', refreshKeepAlive)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.removeEventListener('focus', refreshKeepAlive)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [refreshKeepAlive])
+
+  const handleKeepAlive = (enable: boolean) => {
+    const device = android
+    if (!device?.requestIgnoreBatteryOptimizations || !device?.openBatteryOptimizationSettings) {
+      return
+    }
+    // 乐观置位：拉起的是系统异步授权/设置页，受控开关先跟随点击，最终由回前台重查校正
+    setKeepAliveEnabled(enable)
+    try {
+      if (enable) {
+        device.requestIgnoreBatteryOptimizations()
+      } else {
+        device.openBatteryOptimizationSettings()
+      }
+      window.setTimeout(refreshKeepAlive, 1500)
+    } catch {
+      refreshKeepAlive()
+    }
+  }
+
   const labels: Record<Page, string> = {
     root: t('settings'),
     account: t('accountManagement'),
@@ -474,6 +522,7 @@ const Settings = ({ start, chatFrame }: { start: Page; chatFrame: RefObject<HTML
   const appearance = tr('外观', 'Appearance')
   const voice = tr('朗读音色', 'Read-aloud voice')
   const autoFold = tr('思考内容自动折叠', 'Collapse thinking automatically')
+  const keepAlive = tr('后台保活', 'Background keep-alive')
   const follow = tr('跟随系统', 'Follow system')
   const logout = tr('退出登录', 'Sign out')
   const clear = tr('删除所有历史对话', 'Delete all conversations')
@@ -719,6 +768,19 @@ const Settings = ({ start, chatFrame }: { start: Page; chatFrame: RefObject<HTML
                 icon={<PersonalizationIcon />}
                 onClick={() => openPage('personalization')}
               />
+              {android?.isIgnoringBatteryOptimizations ? (
+                <Row
+                  label={keepAlive}
+                  arrow={false}
+                  control={
+                    <Switch
+                      label={keepAlive}
+                      checked={keepAliveEnabled}
+                      toggle={() => handleKeepAlive(!keepAliveEnabled)}
+                    />
+                  }
+                />
+              ) : null}
             </Group>
             <Group label={tr('语音', 'Voice')}>
               <Row

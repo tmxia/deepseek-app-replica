@@ -57,6 +57,9 @@ export type AndroidBridge = {
     endBottom: number,
     active: boolean
   ) => void
+  isIgnoringBatteryOptimizations?: () => boolean
+  requestIgnoreBatteryOptimizations?: () => void
+  openBatteryOptimizationSettings?: () => void
 }
 
 export const android = (window as Window & { DeepSeekAndroid?: AndroidBridge }).DeepSeekAndroid
