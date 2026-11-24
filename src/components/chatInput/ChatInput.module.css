@@ -493,10 +493,10 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    height: 36px;
-    padding: 0 12px;
+    height: 30px;
+    padding: 0 10px;
     border: 1px solid var(--dsw-alias-border-l2);
-    border-radius: 10px;
+    border-radius: 8px;
     color: var(--dsw-alias-label-secondary);
     background: transparent;
     font: inherit;
@@ -509,8 +509,8 @@
     gap: 5px;
 
     svg {
-      width: 14px;
-      height: 14px;
+      width: 13px;
+      height: 13px;
       fill: none;
       stroke: currentColor;
       stroke-linecap: round;
