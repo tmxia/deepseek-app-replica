@@ -24,6 +24,32 @@ import { MessageFile } from './MessageFile.js'
 import { CopyButton } from './CopyButton.js'
 import styles from './UserMessage.module.css'
 
+/** 折叠后保留的可见行数 */
+const FOLD_LINES = 4
+/** 气泡文本可用宽度（px），按手机典型屏宽与气泡内边距取保守值，偏窄会宁多折不漏折 */
+const MAX_TEXT_WIDTH = 280
+/** 全角/中日韩字符宽度按 1em，其余拉丁/数字/符号按 0.55em 估算 */
+const estimateLineCount = (text: string, fontSize: number) => {
+  const charsPerLine = MAX_TEXT_WIDTH / fontSize
+  let lines = 1
+  let current = 0
+  for (const ch of text) {
+    if (ch === '\n') {
+      lines += 1
+      current = 0
+      continue
+    }
+    const width = /[⺀-鿿豈-﷏　-〿＀-￯]/.test(ch) ? 1 : 0.55
+    if (current + width > charsPerLine) {
+      lines += 1
+      current = width
+    } else {
+      current += width
+    }
+  }
+  return lines
+}
+
 export const UserMessage = memo(function UserMessage({
   sessionId,
   message,
@@ -76,31 +102,27 @@ export const UserMessage = memo(function UserMessage({
       return
     }
     let cancelled = false
-    const measure = () => {
+    const apply = () => {
       if (cancelled || !bubbleTextRef.current) {
         return
       }
-      const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 24
-      const threshold = lineHeight * 4
-      setFoldThreshold(threshold)
-      setNeedsFold(el.scrollHeight > threshold + lineHeight * 0.5)
+      const computed = getComputedStyle(bubbleTextRef.current)
+      const fontSize = parseFloat(computed.fontSize) || 16
+      const lineHeight = parseFloat(computed.lineHeight) || 24
+      setFoldThreshold(lineHeight * FOLD_LINES)
+      // 不读取 scrollHeight 等滚动测量值，仅按文本自身估算行数判定是否折叠
+      setNeedsFold(estimateLineCount(message.content, fontSize) > FOLD_LINES)
     }
-    measure()
-    let observer: ResizeObserver | null = null
-    if (typeof ResizeObserver !== 'undefined') {
-      observer = new ResizeObserver(measure)
-      observer.observe(el)
-    }
+    apply()
     if (document.fonts && typeof document.fonts.ready !== 'undefined') {
       void document.fonts.ready.then(() => {
         if (!cancelled) {
-          measure()
+          apply()
         }
       })
     }
     return () => {
       cancelled = true
-      observer?.disconnect()
     }
   }, [message.content, editing])
 
