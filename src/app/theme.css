@@ -17,9 +17,8 @@ body {
   --ds-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
   --ds-font-family-code:
-    Menlo, Monaco, Consolas, 'Cascadia Mono', 'Ubuntu Mono', 'DejaVu Sans Mono', 'Liberation Mono',
-    'JetBrains Mono', 'Fira Code', Cousine, 'Roboto Mono', 'Courier New', Courier, sans-serif,
-    system-ui;
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Roboto Mono',
+    'Courier New', monospace;
 
   --ds-transition-duration: 0.2s;
   --ds-transition-duration-slow: 0.3s;
