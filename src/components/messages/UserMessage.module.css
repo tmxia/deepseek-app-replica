@@ -152,7 +152,7 @@
   line-height: inherit;
 }
 
-.bubbleTextCollapsed {
+.bubbleCollapsed .bubbleText {
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;

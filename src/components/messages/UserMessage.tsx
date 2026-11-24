@@ -56,7 +56,7 @@ export const UserMessage = memo(function UserMessage({
   const [needsFold, setNeedsFold] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const bubbleRef = useRef<HTMLDivElement>(null)
-  const bubbleTextRef = useRef<HTMLSpanElement>(null)
+  const bubbleTextRef = useRef<HTMLDivElement>(null)
   const menuTriggerRef = useRef<HTMLButtonElement>(null)
   const isMobile = useIsMobile()
   const canSend = !busy && (draft.trim() !== '' || message.files.length > 0)
@@ -210,7 +210,10 @@ export const UserMessage = memo(function UserMessage({
           {message.content ? (
             <div
               ref={bubbleRef}
-              className={styles.bubble}
+              className={clsx(
+                styles.bubble,
+                needsFold && collapsed && styles.bubbleCollapsed
+              )}
               data-editing-bubble={editingTarget ? 'true' : undefined}
               role={android ? 'button' : undefined}
               tabIndex={android ? 0 : undefined}
@@ -230,15 +233,12 @@ export const UserMessage = memo(function UserMessage({
                 }
               }}
             >
-              <span
+              <div
                 ref={bubbleTextRef}
-                className={clsx(
-                  styles.bubbleText,
-                  needsFold && collapsed && styles.bubbleTextCollapsed
-                )}
+                className={styles.bubbleText}
               >
                 {message.content}
-              </span>
+              </div>
               {needsFold ? (
                 <button
                   type="button"
