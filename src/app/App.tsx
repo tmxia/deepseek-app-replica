@@ -40,7 +40,6 @@ import {
   useMobileSider,
 } from '../components/sider/mobileSiderState.js'
 import { MobileSider, Sider } from '../components/sider/Sider.js'
-import { useAndroidDrawerGesture } from '../components/sider/useAndroidDrawerGesture.js'
 import styles from './App.module.css'
 
 const SIDE_DRAWER_WIDTH = 326
@@ -161,10 +160,6 @@ export const App = () => {
   const saveError = Object.values(saveErrors).some(Boolean)
   const importingHistory = useChatStore((state) => state.importingHistory)
   const frameRef = useMobileViewport(isMobile && !android && !needsApiKey)
-  const drawerGesture = useAndroidDrawerGesture(
-    frameRef,
-    Boolean(android && !androidWide && !needsApiKey)
-  )
   const activeId = useChatStore((state) => state.activeId)
 
   useAndroidBackInterception(modalDrawerOpen || (drawerOpen && searchOpen))
@@ -349,7 +344,6 @@ export const App = () => {
         data-drawer-open={drawerOpen}
         data-drawer-search={android && searchOpen ? 'true' : undefined}
         data-drawer-layout={android ? (androidWide ? 'side' : 'modal') : undefined}
-        {...(android && !androidWide ? drawerGesture : {})}
       >
         {isMobile ? <MobileSider /> : siderCollapsed ? null : <Sider />}
         <main ref={mainRef} className={styles.main}>
