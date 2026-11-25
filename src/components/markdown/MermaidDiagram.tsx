@@ -2,6 +2,7 @@ import { useTranslate } from '../../i18n/index.js'
 import { memo, useEffect, useRef, useState } from 'react'
 import { useTheme } from '../../app/theme.js'
 import { renderMermaid } from '../../services/markdown/mermaid.js'
+import { useInView } from '../../utils/useInView.js'
 
 /** 流式绘制最新内容、保留上次有效图；回答结束后才显示渲染错误。 */
 export const MermaidDiagram = memo(function MermaidDiagram({
@@ -13,6 +14,7 @@ export const MermaidDiagram = memo(function MermaidDiagram({
 }) {
   const t = useTranslate()
   const dark = useTheme() === 'dark'
+  const { ref, inView } = useInView<HTMLDivElement>()
   const [result, setResult] = useState({ svg: '', failedCode: null as string | null })
   const latestCodeRef = useRef(code)
   latestCodeRef.current = code
@@ -20,6 +22,9 @@ export const MermaidDiagram = memo(function MermaidDiagram({
   const finalCode = loading ? null : code
 
   useEffect(() => {
+    if (!inView) {
+      return
+    }
     let cancelled = false
     let timer: ReturnType<typeof setTimeout> | undefined
     let previousCode: string | undefined
@@ -74,7 +79,11 @@ export const MermaidDiagram = memo(function MermaidDiagram({
       cancelled = true
       clearTimeout(timer)
     }
-  }, [dark, loading, finalCode])
+  }, [dark, loading, finalCode, inView])
+
+  if (!inView) {
+    return <div ref={ref} className="md-mermaid-status" style={{ minHeight: 96 }} />
+  }
 
   if (!code.trim() || !result.svg) {
     return (

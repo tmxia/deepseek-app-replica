@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { ensureKatex, type Katex } from '../../services/markdown/katex.js'
+import { useInView } from '../../utils/useInView.js'
 
 /** renderToString 外层包裹的标签，组件自己渲染外层，这里切掉 */
 const KATEX_WRAPPER = {
@@ -46,7 +47,7 @@ const useMathHtml = (input: string, isInline: boolean): MathHtmlResult => {
   }, [input, isInline, katex])
 }
 
-export const MathBlock = memo(function MathBlock({ value }: { value: string }) {
+const MathBlockInner = memo(function MathBlockInner({ value }: { value: string }) {
   const { html, renderMode } = useMathHtml(value, false)
   if (renderMode === 'fallback') {
     return <p className="ds-markdown-paragraph">{html}</p>
@@ -56,6 +57,15 @@ export const MathBlock = memo(function MathBlock({ value }: { value: string }) {
       <span className="katex" dangerouslySetInnerHTML={{ __html: html }}></span>
     </span>
   )
+})
+
+export const MathBlock = memo(function MathBlock({ value }: { value: string }) {
+  const { ref, inView } = useInView<HTMLDivElement>()
+  // 块级公式较重：进入视口缓冲前只展示原文占位，不加载 KaTeX 包、不排版公式。
+  if (!inView) {
+    return <div ref={ref} className="ds-markdown-paragraph">{value}</div>
+  }
+  return <MathBlockInner value={value} />
 })
 
 export const InlineMath = memo(function InlineMath({ value }: { value: string }) {
