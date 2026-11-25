@@ -259,6 +259,7 @@ const BalancePanel = ({ state, onRefresh }: { state: BalanceState; onRefresh: ()
   }
 
   const ready = state.status === 'ready'
+  const refreshing = ready && state.refreshing === true
   const symbol = ready ? balanceCurrencySymbol(state.data.currency) : ''
   const currencyCode =
     ready && state.data.currency && !['CNY', 'USD'].includes(state.data.currency)
@@ -290,9 +291,9 @@ const BalancePanel = ({ state, onRefresh }: { state: BalanceState; onRefresh: ()
         </span>
         <button
           type="button"
-          className={styles.balanceRefresh}
+          className={`${styles.balanceRefresh}${refreshing ? ` ${styles.balanceRefreshSpinning}` : ''}`}
           aria-label={t('balanceRefresh')}
-          disabled={state.status === 'loading'}
+          disabled={state.status === 'loading' || refreshing}
           onClick={onRefresh}
         >
           <IconRefreshOutline16 />

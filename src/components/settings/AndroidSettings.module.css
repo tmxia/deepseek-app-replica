@@ -281,6 +281,19 @@ a.row:active,
   }
 }
 
+.balanceRefreshSpinning svg {
+  animation: balance-refresh-spin 700ms linear infinite;
+}
+
+@keyframes balance-refresh-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .balanceMeta {
   display: flex;
   gap: 16px;
