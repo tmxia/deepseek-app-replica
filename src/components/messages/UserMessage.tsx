@@ -10,7 +10,7 @@ import { stopReadAloud } from '../../services/speech/readAloud.js'
 import type { UserMessage as UserMessageType } from '../../services/chat/types.js'
 import { Button } from '../base/Button.js'
 import { IconButton } from '../base/IconButton.js'
-import { Menu } from '../base/Menu.js'
+import { Menu, type MenuOption } from '../base/Menu.js'
 import { showToast } from '../base/toastState.js'
 import { ensureApiKey } from '../settings/settingsDialogState.js'
 import { copyText } from '../../utils/clipboard.js'
@@ -159,6 +159,38 @@ export const UserMessage = memo(function UserMessage({
     )
   }
 
+  // 纯附件消息没有可复制/选择的文本，菜单只保留编辑入口。
+  const menuOptions: MenuOption[] = android
+    ? [
+        ...(message.content
+          ? [
+              {
+                key: 'copy',
+                label: t('copy'),
+                icon: (
+                  <span className={styles.menuCopyIcon}>
+                    <IconCopyOutline16 />
+                  </span>
+                ),
+                onSelect: copyMessage,
+              },
+              {
+                key: 'selectText',
+                label: t('androidSelectText'),
+                icon: <IconSelectTextOutline16 />,
+                onSelect: startSelecting,
+              },
+            ]
+          : []),
+        {
+          key: 'edit',
+          label: t('androidEditMessage'),
+          icon: <IconEditOutline16 />,
+          onSelect: startEdit,
+        },
+      ]
+    : []
+
   return (
     <div
       className={clsx(
@@ -178,6 +210,13 @@ export const UserMessage = memo(function UserMessage({
             styles.files,
             message.files.some((file) => !file.isImage) && styles.filesWithDocuments
           )}
+          onContextMenu={(event) => {
+            if (android) {
+              event.preventDefault()
+              stopSelecting()
+              menuTriggerRef.current?.click()
+            }
+          }}
         >
           {message.files.map((file) => (
             <MessageFile
@@ -278,57 +317,13 @@ export const UserMessage = memo(function UserMessage({
                 </button>
               ) : null}
               {android ? (
-                <>
-                  <AndroidTextSelection
-                    active={selecting}
-                    containerRef={bubbleRef}
-                    contentRef={bubbleTextRef}
-                    initialMode="all"
-                    onExit={stopSelecting}
-                  />
-                  <Menu
-                    variant="userMessage"
-                    anchorClassName={styles.menuAnchor}
-                    options={[
-                      {
-                        key: 'copy',
-                        label: t('copy'),
-                        icon: (
-                          <span className={styles.menuCopyIcon}>
-                            <IconCopyOutline16 />
-                          </span>
-                        ),
-                        onSelect: copyMessage,
-                      },
-                      {
-                        key: 'selectText',
-                        label: t('androidSelectText'),
-                        icon: <IconSelectTextOutline16 />,
-                        onSelect: startSelecting,
-                      },
-                      {
-                        key: 'edit',
-                        label: t('androidEditMessage'),
-                        icon: <IconEditOutline16 />,
-                        onSelect: startEdit,
-                      },
-                    ]}
-                  >
-                    {({ toggle }) => (
-                      <button
-                        ref={menuTriggerRef}
-                        className={styles.menuTrigger}
-                        type="button"
-                        aria-hidden="true"
-                        tabIndex={-1}
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          toggle()
-                        }}
-                      />
-                    )}
-                  </Menu>
-                </>
+                <AndroidTextSelection
+                  active={selecting}
+                  containerRef={bubbleRef}
+                  contentRef={bubbleTextRef}
+                  initialMode="all"
+                  onExit={stopSelecting}
+                />
               ) : null}
             </div>
           ) : null}
@@ -351,6 +346,27 @@ export const UserMessage = memo(function UserMessage({
           ) : null}
         </>
       )}
+      {android && !editing ? (
+        <Menu
+          variant="userMessage"
+          anchorClassName={styles.menuAnchor}
+          options={menuOptions}
+        >
+          {({ toggle }) => (
+            <button
+              ref={menuTriggerRef}
+              className={styles.menuTrigger}
+              type="button"
+              aria-hidden="true"
+              tabIndex={-1}
+              onClick={(event) => {
+                event.stopPropagation()
+                toggle()
+              }}
+            />
+          )}
+        </Menu>
+      ) : null}
     </div>
   )
 })
