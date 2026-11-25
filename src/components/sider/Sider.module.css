@@ -249,10 +249,10 @@
   background: var(--dsw-alias-bg-base);
   transform: translateX(calc((var(--drawer-progress) - 1) * 100%));
   visibility: hidden;
+  /* 抽屉宽度在开合期间恒定，width 不参与过渡，避免布局属性进入动画。 */
   transition:
     transform var(--drawer-transition),
-    visibility var(--drawer-transition),
-    width var(--drawer-transition);
+    visibility var(--drawer-transition);
   box-sizing: border-box;
 }
 

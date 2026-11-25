@@ -122,9 +122,8 @@
   touch-action: pan-y;
   background: var(--dsw-alias-bg-base);
   border-radius: var(--drawer-radius);
-  transition:
-    transform var(--drawer-transition),
-    border-radius var(--drawer-transition);
+  /* 仅合成属性 transform 参与动画；border-radius 为开合两端离散值，不逐帧插值，避免对整块消息容器做圆角裁剪重绘。 */
+  transition: transform var(--drawer-transition);
 }
 
 [data-android] .frame[data-drawer-layout='modal'][data-drawer-open='true'] .main,
