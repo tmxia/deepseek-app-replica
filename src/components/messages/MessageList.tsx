@@ -42,6 +42,10 @@ const EMPTY_VERSIONS: MessageVersions = { ids: [], index: -1 }
 const INITIAL_MESSAGES = 4
 const OLDER_MESSAGES = 8
 const OLDER_THRESHOLD = 320
+// 顶部至少保留的消息条数缓冲；超出后才回收最老一批。保守取值，可通过调大关闭回收。
+const RECLAIM_BUFFER = OLDER_MESSAGES * 2
+// 单次回收的批次大小，与向上补齐批次对齐。
+const RECLAIM_BATCH = OLDER_MESSAGES
 const SEARCH_JUMP_TOP_OFFSET = 10
 const SEARCH_JUMP_SETTLE_MS = 650
 const SEARCH_HIGHLIGHT_MS = 1800
@@ -101,6 +105,7 @@ export const MessageList = ({
     setMessageWindow({ sessionId: session.id, start })
   }
   const prependAnchor = useRef<{ element: Element; top: number } | null>(null)
+  const reclaimAnchor = useRef<{ messageId: string; top: number } | null>(null)
   const [showJumpToBottom, setShowJumpToBottom] = useState(false)
   const [previousVersions, setPreviousVersions] = useState(() =>
     buildMessageVersions(session, new Map())
@@ -459,16 +464,90 @@ export const MessageList = ({
         setMessageWindow({ sessionId: session.id, start: Math.max(0, start - OLDER_MESSAGES) })
       })
     }
-    const observer = new ResizeObserver(loadOlder)
+    // 顶部远端回收：视口上方已加载批次超出缓冲时卸载最老一批，锚点消息保留在窗口内并补偿位置。
+    const reclaimOlder = () => {
+      if (frame || jumpingRef.current || stickyRef.current) {
+        return
+      }
+      if (editingMessageIdRef.current || pendingJump) {
+        return
+      }
+      if (restoreScrollRef.current) {
+        return
+      }
+      if (jumpAnchorRef.current && performance.now() < jumpAnchorRef.current.expiresAt) {
+        return
+      }
+      const visibleCount = messages.length - start
+      if (visibleCount <= RECLAIM_BUFFER) {
+        return
+      }
+      const scrollRect = scroll.getBoundingClientRect()
+      let anchorEl: Element | null = null
+      for (const el of Array.from(content.children)) {
+        if (el.getBoundingClientRect().top + 8 >= scrollRect.top) {
+          anchorEl = el
+          break
+        }
+      }
+      if (!anchorEl) {
+        return
+      }
+      const messageId = anchorEl.getAttribute('data-message-id')
+      if (!messageId) {
+        return
+      }
+      const anchorIndex = messages.findIndex((m) => m.id === messageId)
+      // 锚点太靠近窗口顶部时不回收，避免卸载邻近视口的消息。
+      if (anchorIndex <= start + RECLAIM_BATCH) {
+        return
+      }
+      const ceiling = Math.max(requiredStart, messages.length - RECLAIM_BUFFER)
+      const nextStart = Math.min(start + RECLAIM_BATCH, anchorIndex - 1, ceiling)
+      if (nextStart <= start) {
+        return
+      }
+      reclaimAnchor.current = { messageId, top: anchorEl.getBoundingClientRect().top }
+      setMessageWindow({ sessionId: session.id, start: nextStart })
+    }
+    const observer = new ResizeObserver(() => {
+      loadOlder()
+      reclaimOlder()
+    })
     observer.observe(scroll)
     observer.observe(content)
-    scroll.addEventListener('scroll', loadOlder, { passive: true })
+    const onScroll = () => {
+      loadOlder()
+      reclaimOlder()
+    }
+    scroll.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       cancelAnimationFrame(frame)
       observer.disconnect()
-      scroll.removeEventListener('scroll', loadOlder)
+      scroll.removeEventListener('scroll', onScroll)
     }
-  }, [isMobile, session.id, start])
+  }, [isMobile, session.id, start, messages, requiredStart, pendingJump])
+
+  // 顶部回收卸载一批后，按锚点消息新旧位置补偿滚动偏移，抵消下方内容上移。
+  useLayoutEffect(() => {
+    const anchor = reclaimAnchor.current
+    reclaimAnchor.current = null
+    if (!anchor) {
+      return
+    }
+    const scroll = scrollRef.current
+    const content = contentRef.current
+    if (!scroll || !content) {
+      return
+    }
+    const el = content.querySelector<HTMLElement>(
+      `[data-message-id="${CSS.escape(anchor.messageId)}"]`
+    )
+    if (el?.isConnected) {
+      scroll.scrollTop += el.getBoundingClientRect().top - anchor.top
+      scrollTopRef.current = scroll.scrollTop
+    }
+  }, [start])
 
   // 切换版本后将选择器留在原位置，避免回答长短变化导致操作区跳出视口。
   useLayoutEffect(() => {
