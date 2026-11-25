@@ -1,5 +1,5 @@
 import { useTranslate } from '../../i18n/index.js'
-import { memo, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useReducer, useState } from 'react'
 import clsx from 'clsx'
 import Prism from 'prismjs'
 import {
@@ -92,9 +92,11 @@ export const CodeBlock = memo(function CodeBlock({
   const lang = getHighlightLang(infostring)
   const loaded = lang !== null && isHighlightLoaded(lang)
   const FOLD_LINES = 5
-  const preRef = useRef<HTMLPreElement>(null)
   const [collapsed, setCollapsed] = useState(true)
-  const [needsFold, setNeedsFold] = useState(false)
+  // 按逻辑行判定是否折叠：pre-wrap 下长行折行、上下 padding 都会撑高 scrollHeight，
+  // 用视觉高度会把不足行数的短块误判为需要折叠；不足阈值时不渲染折叠按钮。
+  const codeLineCount = code.trim().split('\n').length
+  const needsFold = !isMermaid && codeLineCount > FOLD_LINES
   useEffect(() => {
     if (lang === null || loaded) {
       return
@@ -114,17 +116,6 @@ export const CodeBlock = memo(function CodeBlock({
     return Prism.highlight(code, Prism.languages[name], name)
   }, [code, name])
 
-  useLayoutEffect(() => {
-    const pre = preRef.current
-    if (!pre || isMermaid) {
-      setNeedsFold(false)
-      return
-    }
-    const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 20
-    const threshold = lineHeight * FOLD_LINES
-    setNeedsFold(pre.scrollHeight > threshold + lineHeight * 0.5)
-  }, [code, name, loaded, isMermaid])
-
   return (
     <div className={clsx('md-code-block', needsFold && collapsed && 'is-collapsed')}>
       <div className="md-code-block-banner">
@@ -140,7 +131,6 @@ export const CodeBlock = memo(function CodeBlock({
       ) : (
         <>
           <pre
-            ref={preRef}
             dangerouslySetInnerHTML={{ __html: renderedHtml }}
             data-lang={name}
           ></pre>
