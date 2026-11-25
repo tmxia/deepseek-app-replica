@@ -14,8 +14,12 @@ import {
 } from '../base/icons.js'
 import { showToast } from '../base/toastState.js'
 import { copyText } from '../../utils/clipboard.js'
+import { useInView } from '../../utils/useInView.js'
 import { MermaidDiagram } from './MermaidDiagram.js'
 import styles from './CodeBlock.module.css'
+
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 /** 代码块标题栏：左侧语言名，右侧复制 */
 const CodeInfoRow = ({
@@ -86,6 +90,7 @@ export const CodeBlock = memo(function CodeBlock({
 }) {
   const isMermaid = infostring.toLowerCase() === 'mermaid'
   const t = useTranslate()
+  const { ref, inView } = useInView<HTMLDivElement>()
   const [showDiagram, setShowDiagram] = useState(true)
   // 语言包注册在全局 Prism 上，每次渲染直接判断；加载完成后触发一次重渲染
   const rerender = useReducer((n: number) => n + 1, 0)[1]
@@ -98,7 +103,7 @@ export const CodeBlock = memo(function CodeBlock({
   const codeLineCount = code.trim().split('\n').length
   const needsFold = !isMermaid && codeLineCount > FOLD_LINES
   useEffect(() => {
-    if (lang === null || loaded) {
+    if (!inView || lang === null || loaded) {
       return
     }
     let unmounted = false
@@ -110,14 +115,18 @@ export const CodeBlock = memo(function CodeBlock({
     return () => {
       unmounted = true
     }
-  }, [lang, loaded, rerender])
+  }, [lang, loaded, rerender, inView])
   const name = lang !== null && loaded ? lang : 'plaintext'
   const renderedHtml = useMemo(() => {
+    // 未进入视口时先渲染纯文本，不触发 Prism 分词着色与语言包加载。
+    if (!inView) {
+      return escapeHtml(code)
+    }
     return Prism.highlight(code, Prism.languages[name], name)
-  }, [code, name])
+  }, [code, name, inView])
 
   return (
-    <div className={clsx('md-code-block', needsFold && collapsed && 'is-collapsed')}>
+    <div ref={ref} className={clsx('md-code-block', needsFold && collapsed && 'is-collapsed')}>
       <div className="md-code-block-banner">
         <CodeInfoRow
           code={code}
