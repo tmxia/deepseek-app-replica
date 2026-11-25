@@ -66,8 +66,8 @@
 
 [data-android] .frame[data-drawer-layout='modal'][data-drawer-open='true'],
 [data-android] .frame[data-drawer-layout='modal'][data-drawer-dragging] {
-  --drawer-transform: translateX(calc(var(--drawer-edge) * var(--drawer-progress)))
-    scale(calc(1 - 0.0504 * var(--drawer-progress)));
+  /* 抽屉开合只做纯水平平推；去掉 scale 收缩，避免卡片上下边缘随缩放反复重绘/光栅化产生顶底横线闪。 */
+  --drawer-transform: translateX(calc(var(--drawer-edge) * var(--drawer-progress)));
 }
 
 [data-android] .frame[data-drawer-layout='modal'][data-drawer-open='true']::before,
